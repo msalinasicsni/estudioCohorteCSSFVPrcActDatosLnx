@@ -169,10 +169,10 @@ public class EscuelasCatalogoDA extends ConnectionDAO implements EscuelasCatalog
 		Connection connODBC = null;
 		List<EscuelaCatalogo> escuelasList = new ArrayList<EscuelaCatalogo>();
         try {
-        	//connODBC = getODBCConnection(config.getString("ftp.localPath").concat(config.getString("ftp.file.pdvi")),config.getString("dns.bdpdvi.password"),"");//getODBCConnection(config.getString("dns.bdpdvi"));
+        	//para windows connODBC = getODBCConnection(config.getString("ftp.localPath").concat(config.getString("ftp.file.pdvi")),config.getString("dns.bdpdvi.password"),"");//getODBCConnection(config.getString("dns.bdpdvi"));
         	connODBC = getUcanaccessCryptedConnection(config.getString("ftp.localPath").concat(config.getString("ftp.file.pdvi")),config.getString("dns.bdpdvi.password"),"");
         	 String query = "select escuela, escuela_descripcion " +
-			      		"from Escuelas_DGCatalogo";
+			      		"from Escuelas_DGCatalogo where activo = true";
         	stmt = connODBC.createStatement();
         	rs = stmt.executeQuery(query);
 		      while (rs.next()) {

@@ -107,4 +107,73 @@ public class ConnectionDAO {
 		//return DriverManager.getConnection("jdbc:ucanaccess://words.accdb;jackcessOpener=CryptCodecOpener", "user", "pass");
 		return DriverManager.getConnection("jdbc:ucanaccess://"+dns+";jackcessOpener=ni.com.sts.estudioCohorteCSSFV.util.CryptCodecOpener", username, password);//Establishing Connection
 	}
+	
+	/* Conexión a MySql -> 3/12/2019 - SC ************************************************************************************/
+	public Connection getConectionMySql() {
+		logger.debug("getConectionMySql():start");
+		try {
+			ParametersFromManualConnection parametersConnection = new ParametersFromManualConnection();
+		
+			logger.debug("databaseMySql.host [" + config.getString("databaseMySql.host") + "]");
+			parametersConnection.setHostName(config.getString("databaseMySql.host"));
+			//logger.debug("databaseMySql.host [" + dataBaseHost + "]");
+			//parametersConnection.setHostName(dataBaseHost);
+
+			logger.debug("databaseMySql.name [" + config.getString("databaseMySql.name") + "]");
+			parametersConnection.setDatabaseName(config.getString("databaseMySql.name"));
+			//logger.debug("databaseMySql.name [" + dataBaseName + "]");
+			//parametersConnection.setDatabaseName(dataBaseName);
+
+			logger.debug("databaseMySql.user [" + config.getString("databaseMySql.user") + "]");
+			parametersConnection.setDatabaseUserName(config.getString("databaseMySql.user"));
+
+			logger.debug("databaseMySql.password [" + config.getString("databaseMySql.password") + "]");
+			parametersConnection.setPassword(config.getString("databaseMySql.password"));
+
+			logger.debug("databaseMySql.port [" + config.getString("databaseMySql.port") + "]");
+			parametersConnection.setPort(Integer.valueOf(config.getString("databaseMySql.port")));
+
+			logger.debug("databaseMySql.maxlimit [" + config.getString("databaseMySql.maxlimit") + "]");
+			parametersConnection.setMaxlimit(config.getString("databaseMySql.maxlimit"));
+
+			logger.debug("databaseMySql.minlimit [" + config.getString("databaseMySql.minlimit") + "]");
+			parametersConnection.setMinlimit(config.getString("databaseMySql.minlimit"));
+			return getConnectionManualToMySqlDB(parametersConnection);
+		} catch (Exception e1) {
+			logger.error(" No se pudo obtener una conexión ", e1);
+			return null;
+		} finally {
+			logger.debug("getConectionMySql():end");
+		}
+	}
+	
+	private Connection getConnectionManualToMySqlDB(ParametersFromManualConnection parametros) throws SQLException {
+
+		final Properties props = new Properties();
+		props.put("user", parametros.getDatabaseUserName());
+		props.put("password", parametros.getPassword());
+		try {
+			//Class.forName("org.postgresql.Driver").newInstance();
+			Class.forName("org.mysql.jdbc.Driver").newInstance();
+		} catch (final ClassNotFoundException ex) {
+			ex.printStackTrace();
+			logger.error("ClassNotFoundException", ex);
+		} catch (final IllegalAccessException ex) {
+			ex.printStackTrace();
+			logger.error("IllegalAccessException", ex);
+		} catch (final InstantiationException ex) {
+			ex.printStackTrace();
+			logger.error("InstantiationException", ex);
+		}
+
+		final StringBuffer url = new StringBuffer();
+		//url.append("jdbc:postgresql://");
+		url.append("jdbc:mysql://");
+		url.append(parametros.getHostName());
+		url.append(":");
+		url.append(parametros.getPort().toString());
+		url.append("/");
+		url.append(parametros.getDatabaseName());
+		return DriverManager.getConnection(url.toString(), props);
+	}
 }

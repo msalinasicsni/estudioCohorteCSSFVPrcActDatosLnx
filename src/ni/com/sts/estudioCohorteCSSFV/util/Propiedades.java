@@ -22,7 +22,8 @@ public class Propiedades
     private List propertyFromClassPath;
     private List basePath;
     private CompositeConfiguration config;
-    public static final String BASEPATH = "/opt/procesos/actualizacionDatos"; //"/ni/com/sts/propiedadesGeneral/";
+    //public static final String BASEPATH = "/opt/procesos/actualizacionDatos"; //"/ni/com/sts/propiedadesGeneral/";
+    public static final String BASEPATH = "/ni/com/sts/propiedadesGeneral";
     //private final Logger logger = Logger.getLogger(this.getClass());
 
     public Propiedades()
@@ -47,8 +48,8 @@ public class Propiedades
     {
 
         propertyFromClassPath.add(fileName);
-        loadPropertyfromFileSystem(fileName, defaultDir() + "/ni/com/sts/propertiesGenerales/");
-        //loadPropertyfromFileSystem(fileName, userDir() + "/ni/com/sts/propertiesGenerales/");
+        //loadPropertyfromFileSystem(fileName, defaultDir() + "/ni/com/sts/propertiesGenerales/");
+        loadPropertyfromFileSystem(fileName, userDir() + "/ni/com/sts/propertiesGenerales/");
 
     }
 
@@ -99,6 +100,7 @@ public class Propiedades
     {
     	 
         String userDir = System.getProperty("user.dir");
+        System.out.print("user.dir[" + userDir + "]");
         return userDir;
     }
 

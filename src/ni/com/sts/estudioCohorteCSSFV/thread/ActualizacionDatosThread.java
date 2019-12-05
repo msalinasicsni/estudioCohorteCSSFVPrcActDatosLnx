@@ -38,16 +38,19 @@ public class ActualizacionDatosThread extends Thread {
 	private final Logger logger = Logger.getLogger(this.getClass());
 	private CompositeConfiguration config;
 	private ParametroService parametroService = new ParametrosDA();
-	private EscuelasCatalogoService escuelasCatalogoService = new EscuelasCatalogoDA();
-	private EstudiosCatalogoService estudiosCatalogoService = new EstudiosCatalogoDA();
+	//private EscuelasCatalogoService escuelasCatalogoService = new EscuelasCatalogoDA();
+	//private EstudiosCatalogoService estudiosCatalogoService = new EstudiosCatalogoDA();
 	private PacientesService pacientesService = new PacientesDA();
-	private ConsEstudiosService consEstudiosService = new ConsEstudiosDA();
+	//private ConsEstudiosService consEstudiosService = new ConsEstudiosDA();
 	private HistEjecucionProcesoService histEjecucionProcesoService = new HistEjecucionProcesoDA();
 	private Connection conn = null;
+	private Connection connMySql = null;
 	private ConnectionDAO connectionDAO = new ConnectionDAO();
 	
 	private void abrirConexion(){
+		//conn = connectionDAO.getConection();
 		conn = connectionDAO.getConection();
+		connMySql = connectionDAO.getConectionMySql();
 	}
 	
 	private void cerrarConexion() throws SQLException{
@@ -55,20 +58,27 @@ public class ActualizacionDatosThread extends Thread {
 			conn.close();
 			logger.info("Se cierra conexion");
 		}
+		if (connMySql!=null && !connMySql.isClosed()){
+			connMySql.close();
+			logger.info("Se cierra conexion");
+		}
 	}
 	
 	private void iniciarTransaccion() throws SQLException{
 		conn.setAutoCommit(false);	
+		connMySql.setAutoCommit(false);	
 		logger.info("Se inicia transaccion");
 	}
 	
 	private void confirmarTransaccion() throws SQLException{
 		conn.commit();
+		connMySql.commit();
 		logger.info("Se confirma transaccion");
 	}
 	
 	private void deshacerTransaccion() throws SQLException{
 		conn.rollback();
+		connMySql.rollback();
 		logger.info("Se deshace transaccion");
 	}
 	  
@@ -81,7 +91,7 @@ public class ActualizacionDatosThread extends Thread {
 		while(true){
 			try{
 				
-				HistEjecucionProcesoAutomatico ejecucionProcesoHoy = histEjecucionProcesoService.getEjecucionProcesoFechaHoy("ACTDATOS");
+				/*HistEjecucionProcesoAutomatico ejecucionProcesoHoy = histEjecucionProcesoService.getEjecucionProcesoFechaHoy("ACTDATOS");
 				if (ejecucionProcesoHoy!=null){
 					logger.debug("Se duerme main una hora");
 					System.out.println("Se duerme main una hora");
@@ -165,8 +175,89 @@ public class ActualizacionDatosThread extends Thread {
 						logger.debug("despierta main");
 						System.out.println("despierta main");
 					}
+				}*/
+				HistEjecucionProcesoAutomatico ejecucionProcesoHoy = histEjecucionProcesoService
+						.getEjecucionProcesoFechaHoy("ACTDATOS");
+				if (ejecucionProcesoHoy != null) {
+					logger.debug("Se duerme main una hora");
+					System.out.println("Se duerme main una hora");
+					this.sleep(3600000);// 3600000 si ya se ejecuto se duerme una hora, por si se cambia el parámetro de
+										// la hora ejecución se vuelva a ejecutar
+					logger.debug("despierta main");
+					System.out.println("despierta main");
+				} else {
+					String valor = parametroService.getParametroByName("HORA_EJECUCION_ADPC");
+					if (valor != null) {
+						System.out.println("HORA_EJECUCION_CAOC = " + valor);
+						Date dFechaHoy = new Date();
+						String sFechaHoy = UtilDate.DateToString(dFechaHoy, "dd/MM/yyyy");
+						Date dFechaEjecucion = UtilDate.StringToDate(sFechaHoy + " " + valor, "dd/MM/yyyy HH:mm");
+						System.out.println(dFechaEjecucion.compareTo(dFechaHoy));
+						if (dFechaEjecucion.compareTo(dFechaHoy) < 0) {
+							InfoResultado registroProceso = histEjecucionProcesoService
+									.registrarEjecucionProceso("ACTDATOS");
+							if (registroProceso.isOk()) {
+								connNoTransac = connectionDAO.getConection();
+								abrirConexion();
+								// BD PDVI
+
+								/*
+								 * FTPParams params = new FTPParams();
+								 * params.setServer(config.getString("ftp.server"));
+								 * params.setPort(Integer.valueOf(config.getString("ftp.port")));
+								 * params.setUser(config.getString("ftp.user"));
+								 * params.setPass(config.getString("ftp.pass"));
+								 * params.setFileName(config.getString("ftp.file.pdvi"));
+								 * params.setRemoteFilePath(config.getString("ftp.remotePath.pdvi"));
+								 * params.setLocalFilePath(config.getString("ftp.localPath")); FTPConnection
+								 * ftpClient = new FTPConnection(); //InfoResultado resultado =
+								 * ftpClient.downloadFile(params); //aca descargar archivo InfoResultado
+								 * resultado = ftpClient.downloadFileSFTP(params);
+								 * System.out.println(resultado.getMensaje());
+								 * logger.info(resultado.getMensaje()); if (resultado.isOk()){
+								 * //cargarEscuelas(connNoTransac); cargarPacientes(connNoTransac); //eliminarlo
+								 * File pdviFile = new File(params.getLocalFilePath()+params.getFileName());
+								 * if(pdviFile.delete()){
+								 * logger.info(params.getLocalFilePath()+params.getFileName()+ ":: eliminado");
+								 * }else{ logger.info(params.getLocalFilePath()+params.getFileName()+
+								 * ":: no fue eliminado"); } }
+								 */
+								cargarPacientes(connNoTransac);
+								// BD ScanCartas
+								// params.setFileName(config.getString("ftp.file.scancartas"));
+								// params.setRemoteFilePath(config.getString("ftp.remotePath.scancartas"));
+								// InfoResultado resultado = ftpClient.downloadFile(params);
+								// aca descargar otro archivo
+								// resultado = ftpClient.downloadFileSFTP(params);
+								// System.out.println(resultado.getMensaje());
+								// logger.info(resultado.getMensaje());
+								/*
+								 * if (resultado.isOk()){ //cargarEstudios(connNoTransac);
+								 * //cargarConcentimientos(connNoTransac); //aca eliminarlo File pdviFile = new
+								 * File(params.getLocalFilePath()+params.getFileName()); if(pdviFile.delete()){
+								 * logger.info(params.getLocalFilePath()+params.getFileName()+ ":: eliminado");
+								 * }else{ logger.info(params.getLocalFilePath()+params.getFileName()+
+								 * ":: no fue eliminado"); } } }else{
+								 * logger.error(registroProceso.getMensaje()); }
+								 */
+							} else {
+								logger.debug("Se duerme main 5 min");
+								System.out.println("Se duerme main 5 min");
+								Thread.currentThread().sleep(300000);// 300000 si aún no es hora de ejecutar proceso se
+																		// duerme 5 minutos
+								logger.debug("despierta main");
+								System.out.println("despierta main");
+							}
+						} else {
+							logger.debug("Se duerme main 5 min. No se encontró valor de parámetro HORA_EJECUCION_ADPC");
+							System.out.println(
+									"Se duerme main 5 min. No se encontró valor de parámetro HORA_EJECUCION_ADPC");
+							this.sleep(300000);// 300000 si aún no es hora de ejecutar proceso se duerme 5 minutos
+							logger.debug("despierta main");
+							System.out.println("despierta main");
+						}
+					}
 				}
-				  
 			}catch(Exception ex){
 				logger.error("Error en la ejecucion de: "+this.getName(),ex);				
 			}finally{
@@ -188,7 +279,7 @@ public class ActualizacionDatosThread extends Thread {
 
 	}
 	
-	private void cargarEscuelas(Connection connNoTransac){
+	/*private void cargarEscuelas(Connection connNoTransac){
 		  try { 
 			  logger.info("Proceso actualizacion datos escuelas iniciado");
 			  escuelasCatalogoService.setConnTransac(conn);
@@ -227,7 +318,7 @@ public class ActualizacionDatosThread extends Thread {
 		    } finally {
 		    	logger.info("Proceso actualizacion datos escuelas terminado");		      
 		    }
-	}
+	}*/
 
 	private void cargarPacientes(Connection connNoTransac){
 		try { 
@@ -240,12 +331,12 @@ public class ActualizacionDatosThread extends Thread {
 			      for(Paciente paciente: pacientesList){
 			    	  pacientesService.AddPaciente(paciente);
 			      }
-			      pacientesService.limpiarPacientesTmp();
+			      //pacientesService.limpiarPacientesTmp();
 			      confirmarTransaccion();
 		      }else{
 		    	  logger.info("no se encontraron registros en base de datos ODBC, se procede a deshacerRespaldo ConsEstudiosDA");
 		    	  try{
-			    		pacientesService.deshacerRespaldo(connNoTransac);		    		
+			    		//pacientesService.deshacerRespaldo(connNoTransac);		    		
 			    		deshacerTransaccion();		    		
 			    	}catch(Exception ex){
 			    		ex.printStackTrace();
@@ -256,7 +347,7 @@ public class ActualizacionDatosThread extends Thread {
 		    } catch (Exception e) {
 		      // handle the exception
 		    	try{
-		    		pacientesService.deshacerRespaldo(connNoTransac);		    		
+		    		//pacientesService.deshacerRespaldo(connNoTransac);		    		
 		    		deshacerTransaccion();		    		
 		    	}catch(Exception ex){
 		    		ex.printStackTrace();
@@ -270,7 +361,7 @@ public class ActualizacionDatosThread extends Thread {
 		    }
 	}
 	
-	private void cargarEstudios(Connection connNoTransac){
+	/*private void cargarEstudios(Connection connNoTransac){
 		  try {
 			  logger.info("Proceso actualizacion datos estudios iniciado");
 			  estudiosCatalogoService.setConnTransac(conn);
@@ -348,5 +439,5 @@ public class ActualizacionDatosThread extends Thread {
 		    } finally {
 		    	logger.info("Proceso actualizacion datos consentimientos terminado");		      
 		    }
-	}
+	}*/
 }

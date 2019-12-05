@@ -43,7 +43,10 @@ public class PacientesDA extends ConnectionDAO implements PacientesService {
 	public void AddPaciente(Paciente dato) throws Exception {
 		PreparedStatement pst = null;
         try {
-            pst = connTransac.prepareStatement("INSERT INTO paciente(cod_expediente, nombre1, nombre2, apellido1, apellido2, sexo, fecha_nac, edad, " +
+            /*pst = connTransac.prepareStatement("INSERT INTO paciente(cod_expediente, nombre1, nombre2, apellido1, apellido2, sexo, fecha_nac, edad, " +
+            		"estudiante, turno, escuela, tutor_nombre1, tutor_nombre2, tutor_apellido1, tutor_apellido2, direccion, telefono, telefono2, telefono3, retirado) " +
+            		"values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");*/
+        	pst = connTransac.prepareStatement("INSERT INTO paciente(cod_expediente, nombre1, nombre2, apellido1, apellido2, sexo, fecha_nac, edad, " +
             		"estudiante, turno, escuela, tutor_nombre1, tutor_nombre2, tutor_apellido1, tutor_apellido2, direccion, telefono, telefono2, telefono3, retirado) " +
             		"values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
             pst.setInt(1, dato.getCodExpediente());
@@ -53,18 +56,18 @@ public class PacientesDA extends ConnectionDAO implements PacientesService {
             pst.setString(5, dato.getApellido2());
             pst.setString(6, String.valueOf(dato.getSexo()));
             pst.setDate(7, (Date)dato.getFechaNac());
-            pst.setInt(8, dato.getEdad());
-            pst.setString(9, String.valueOf(dato.getEstudiante()));
-            pst.setString(10, String.valueOf(dato.getTurno()));
-            pst.setInt(11, dato.getEscuela());
+            pst.setInt(8, 0);
+            pst.setString(9, null);
+            pst.setString(10, null);
+            pst.setInt(11, 0);
             pst.setString(12, dato.getTutorNombre1());
             pst.setString(13, dato.getTutorNombre2());
             pst.setString(14, dato.getTutorApellido1());
             pst.setString(15, dato.getTutorApellido2());
-            pst.setString(16, dato.getDireccion());
-            pst.setString(17, dato.getTelefono());
-            pst.setString(18, dato.getTelefono2());
-            pst.setString(19, dato.getTelefono3());
+            pst.setString(16, null);
+            pst.setString(17, null);
+            pst.setString(18, null);
+            pst.setString(19, null);
             pst.setString(20, String.valueOf(dato.getRetirado()));
             
             pst.executeUpdate();
@@ -139,59 +142,75 @@ public class PacientesDA extends ConnectionDAO implements PacientesService {
 		Statement stmt = null;
 		ResultSet rs = null;
 		Connection connODBC = null;
+		connODBC = getConectionMySql();
 		List<Paciente> pacientesList = new ArrayList<Paciente>();
         try {
         	//connODBC = getODBCConnection(config.getString("ftp.localPath").concat(config.getString("ftp.file.pdvi")),config.getString("dns.bdpdvi.password"),"");//getODBCConnection(config.getString("dns.bdpdvi"));
-        	connODBC = getUcanaccessCryptedConnection(config.getString("ftp.localPath").concat(config.getString("ftp.file.pdvi")),config.getString("dns.bdpdvi.password"),"");
-        	String query = "select codigo, nombre, nombre2, apellido, apellido2, sexo, fechana, edad, estud, turno, escuela, nombrept, nombrept2, " +
+        	//connODBC = getUcanaccessCryptedConnection(config.getString("ftp.localPath").concat(config.getString("ftp.file.pdvi")),config.getString("dns.bdpdvi.password"),"");
+        	/*String query = "select codigo, nombre, nombre2, apellido, apellido2, sexo, fechana, edad, estud, turno, escuela, nombrept, nombrept2, " +
 		      		"apellidopt, apellidopt2, direc, Telefono1, Telefono2, Telefono3, retirado  " +
-		      		"from Datos_Generales_Data";
+		      		"from Datos_Generales_Data";*/
+        	String query = "select a.CODIGO, a.NOMBRE1, a.NOMBRE2, a.APELLIDO1, a.APELLIDO2, a.SEXO, a.FECHANAC, " + 
+        			"a.NOMBREPT, a.NOMBREPT2, a.APELLIDOPT, a.APELLIDOPT2, b.est_part " + 
+        			"from participantes a " + 
+        			"inner join participantes_procesos b on a.CODIGO = b.codigo";
         	stmt = connODBC.createStatement();
         	rs = stmt.executeQuery(query);
 		      while (rs.next()) {
 		    	  Paciente paciente = new Paciente();
-		    	  paciente.setCodExpediente(rs.getInt("codigo"));
+		    	  //paciente.setCodExpediente(rs.getInt("codigo"));
+		    	  paciente.setCodExpediente(rs.getInt("CODIGO"));
 		    	  
-		    	  paciente.setNombre1(rs.getString("nombre"));
+		    	  //paciente.setNombre1(rs.getString("nombre"));
+		    	  paciente.setNombre1(rs.getString("NOMBRE1"));
 		    	  if (paciente.getNombre1() != null && paciente.getNombre1().length()>32)
 		    		  paciente.setNombre1(paciente.getNombre1().substring(0,31));
 		    	  
-		    	  paciente.setNombre2(rs.getString("nombre2"));
+		    	  //paciente.setNombre2(rs.getString("nombre2"));
+		    	  paciente.setNombre2(rs.getString("NOMBRE2"));
 		    	  if (paciente.getNombre2() != null && paciente.getNombre2().length()>32)
 		    		  paciente.setNombre2(paciente.getNombre2().substring(0,31));
 		    	  
-		    	  paciente.setApellido1(rs.getString("apellido"));
+		    	  //paciente.setApellido1(rs.getString("apellido"));
+		    	  paciente.setApellido1(rs.getString("APELLIDO1"));
 		    	  if (paciente.getApellido1() != null && paciente.getApellido1().length()>32)
 		    		  paciente.setApellido1(paciente.getApellido1().substring(0,31));
 		    	  
-		    	  paciente.setApellido2(rs.getString("apellido2"));
+		    	  //paciente.setApellido2(rs.getString("apellido2"));
+		    	  paciente.setApellido2(rs.getString("APELLIDO2"));
 		    	  if (paciente.getApellido2() != null && paciente.getApellido2().length()>32)
 		    		  paciente.setApellido2(paciente.getApellido2().substring(0,31));
 		    	  
-		    	  paciente.setSexo(rs.getString("sexo").charAt(0));
-		    	  paciente.setFechaNac(rs.getDate("fechana"));
-		    	  paciente.setEdad(rs.getShort("edad"));
+		    	  /*paciente.setSexo(rs.getString("sexo").charAt(0));
+		    	  paciente.setFechaNac(rs.getDate("fechana"));*/
+		    	  paciente.setSexo(rs.getString("SEXO").charAt(0));
+		    	  paciente.setFechaNac(rs.getDate("FECHANAC"));
+		    	  /*paciente.setEdad(rs.getShort("edad"));
 		    	  paciente.setEstudiante(rs.getString("estud").charAt(0));
 		    	  paciente.setTurno(rs.getString("turno").charAt(0));
-		    	  paciente.setEscuela(rs.getShort("escuela"));
+		    	  paciente.setEscuela(rs.getShort("escuela"));*/
 		    	  
-		    	  paciente.setTutorNombre1(rs.getString("nombrept"));
+		    	  //paciente.setTutorNombre1(rs.getString("nombrept"));
+		    	  paciente.setTutorNombre1(rs.getString("NOMBREPT"));
 		    	  if (paciente.getTutorNombre1() != null && paciente.getTutorNombre1().length()>32)
 		    		  paciente.setTutorNombre1(paciente.getTutorNombre1().substring(0,31));
 		    	  
-		    	  paciente.setTutorNombre2(rs.getString("nombrept2"));
+		    	  //paciente.setTutorNombre2(rs.getString("nombrept2"));
+		    	  paciente.setTutorNombre2(rs.getString("NOMBREPT2"));
 		    	  if (paciente.getTutorNombre2() != null && paciente.getTutorNombre2().length()>32)
 		    		  paciente.setTutorNombre2(paciente.getTutorNombre2().substring(0,31));
 		    	  
-		    	  paciente.setTutorApellido1(rs.getString("apellidopt"));
+		    	  //paciente.setTutorApellido1(rs.getString("apellidopt"));
+		    	  paciente.setTutorApellido1(rs.getString("APELLIDOPT2"));
 		    	  if (paciente.getTutorApellido1() != null && paciente.getTutorApellido1().length()>32)
 		    		  paciente.setTutorApellido1(paciente.getTutorApellido1().substring(0,31));
 		    	  
-		    	  paciente.setTutorApellido2(rs.getString("apellidopt2"));
+		    	  //paciente.setTutorApellido2(rs.getString("apellidopt2"));
+		    	  paciente.setTutorApellido2(rs.getString("APELLIDOPT2"));
 		    	  if (paciente.getTutorApellido2() != null && paciente.getTutorApellido2().length()>32)
 		    		  paciente.setTutorApellido2(paciente.getTutorApellido2().substring(0,31));
 		    	  
-		    	  paciente.setDireccion(rs.getString("direc"));
+		    	  /*paciente.setDireccion(rs.getString("direc"));
 		    	  if (paciente.getDireccion() != null && paciente.getDireccion().length()>256)
 		    		  paciente.setDireccion(paciente.getDireccion().substring(0,255));
 		    	  
@@ -205,9 +224,11 @@ public class PacientesDA extends ConnectionDAO implements PacientesService {
 		    	  
 		    	  paciente.setTelefono3(rs.getString("Telefono3"));
 		    	  if (paciente.getTelefono3() != null && paciente.getTelefono3().length()>32)
-		    		  paciente.setTelefono3(paciente.getTelefono3().substring(0,31));
+		    		  paciente.setTelefono3(paciente.getTelefono3().substring(0,31));*/
 		    	  
-		    	  paciente.setRetirado(rs.getBoolean("retirado")==true?'1':'0');
+		    	  //paciente.setRetirado(rs.getBoolean("retirado")==true?'1':'0');
+		    	  paciente.setRetirado(rs.getBoolean("est_part")==true?'1':'0');
+		    	  
 		    	  
 		    	  //logger.info(paciente.getCodExpediente() + " " + paciente.getNombre1()+ " " + paciente.getNombre2()+ " " + paciente.getApellido1()+ " " + paciente.getApellido2());		    	  
 		    	  pacientesList.add(paciente);
@@ -218,14 +239,14 @@ public class PacientesDA extends ConnectionDAO implements PacientesService {
             throw new Exception(e);
         } finally {
             try {
-            	if (rs != null)
-            		rs.close();
-            	if (stmt != null)
-            		stmt.close();
-	        if (!connODBC.isClosed()){
-	        	connODBC.close();
-	        	System.out.println("Conexión cerrada");
-	        }
+				if (rs != null)
+					rs.close();
+				if (stmt != null)
+					stmt.close();
+				if (!connODBC.isClosed()) {
+					connODBC.close();
+					System.out.println("Conexión cerrada");
+				}
             } catch (SQLException ex) {
     			logger.error(" No se pudo cerrar conexión ", ex);
             }

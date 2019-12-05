@@ -24,6 +24,7 @@ public class Propiedades
     private CompositeConfiguration config;
     //public static final String BASEPATH = "/opt/procesos/actualizacionDatos"; //"/ni/com/sts/propiedadesGeneral/";
     public static final String BASEPATH = "/ni/com/sts/propiedadesGeneral";
+    //public static final String BASEPATH = "/opt/procesos/actualizacionDatos"; //"C:/procesos/actualizacionDatos"; //para windows
     //private final Logger logger = Logger.getLogger(this.getClass());
 
     public Propiedades()
@@ -117,8 +118,8 @@ public class Propiedades
     }
 
     public String defaultDir(){
-    	//windows return "C:/estudioCohorte/procesos/actualizacionDatos";
-    	return "/opt/procesos/actualizacionDatos";
+    	//return "C://procesos//actualizacionDatos"; //para windows
+    	return "/opt/procesos/actualizacionDatos"; 
     }
 
 }

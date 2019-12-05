@@ -5,7 +5,7 @@
 	<classpathentry kind="lib" path="/Componentes/Libs/postgresql-9.2-1002.jdbc3.jar"/>
 	<classpathentry kind="lib" path="/Componentes/Libs/commons-configuration-1.5.jar"/>
 	<classpathentry kind="lib" path="/Componentes/Libs/log4j-1.2.14.jar"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/jre7"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/jdk1.7.0_75"/>
 	<classpathentry kind="lib" path="/Componentes/Libs/ftpclient/commons-net-3.3.jar"/>
 	<classpathentry kind="lib" path="/Componentes/Libs/ftpclient/jsch-0.1.52.jar"/>
 	<classpathentry exported="true" kind="lib" path="/Componentes/Libs/ucanaccess-4.0.4/commons-lang-2.6.jar"/>
@@ -15,5 +15,6 @@
 	<classpathentry exported="true" kind="lib" path="/Componentes/Libs/ucanaccess-4.0.4/jackcess-encrypt-2.1.4.jar"/>
 	<classpathentry exported="true" kind="lib" path="/Componentes/Libs/ucanaccess-4.0.4/ucanaccess-4.0.4.jar"/>
 	<classpathentry kind="lib" path="/Componentes/Libs/ucanaccess-4.0.4/bcprov-jdk15on-160.jar"/>
+	<classpathentry kind="lib" path="/Componentes/Libs/mysql-connector-java-5.1.9.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

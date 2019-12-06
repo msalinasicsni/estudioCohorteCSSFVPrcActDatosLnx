@@ -11,7 +11,6 @@ import java.util.List;
 import org.apache.commons.configuration.CompositeConfiguration;
 import org.apache.log4j.Logger;
 
-import ni.com.sts.estudioCohorteCSSFV.modelo.EscuelaCatalogo;
 import ni.com.sts.estudioCohorteCSSFV.modelo.EstudioCatalogo;
 import ni.com.sts.estudioCohorteCSSFV.servicios.EstudiosCatalogoService;
 import ni.com.sts.estudioCohorteCSSFV.util.ConnectionDAO;
@@ -197,6 +196,40 @@ public class EstudiosCatalogoDA extends ConnectionDAO implements EstudiosCatalog
 	        	connODBC.close();
 	        	System.out.println("Conexión cerrada");
 	        }
+            } catch (SQLException ex) {
+    			logger.error(" No se pudo cerrar conexión ", ex);
+            }
+        } 
+		
+	      return estudiosList;
+	}
+	
+	@Override
+	public List<EstudioCatalogo> getEstudiosFromDBEstudios(Connection connNoTransac) throws Exception{
+		Statement stmt = null;
+		ResultSet rs = null;
+		List<EstudioCatalogo> estudiosList = new ArrayList<EstudioCatalogo>();
+        try {
+        	String query = "select cons, desc_cons " +
+		      		"from tipo_consentimiento";
+        	stmt = connNoTransac.createStatement();
+        	rs = stmt.executeQuery(query);
+		      while (rs.next()) {
+		    	  EstudioCatalogo estudio = new EstudioCatalogo();
+		    	  estudio.setCodEstudio(rs.getInt("cons"));
+		    	  estudio.setDescEstudio(rs.getString("desc_cons"));		    	  
+		    	  //logger.info(estudio.getCodEstudio() + " " + estudio.getDescEstudio());
+		    	  //System.out.println(estudio.getCodEstudio() + " " + estudio.getDescEstudio());
+		    	  estudiosList.add(estudio);
+		      }
+        } catch (Throwable e) {
+            e.printStackTrace();
+            logger.error("Se ha producido un error al consultar base de datos ODBC :: EstudiosCatalogoDA" + "\n" + e.getMessage(),e);
+            throw new Exception(e);
+        } finally {
+            try {
+            	rs.close();
+	        	stmt.close();
             } catch (SQLException ex) {
     			logger.error(" No se pudo cerrar conexión ", ex);
             }

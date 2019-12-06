@@ -18,6 +18,8 @@ public interface PacientesService {
 	public void limpiarPacientesTmp() throws Exception;
 
 	public List<Paciente> getPacientesFromODBC() throws Exception;
+	
+	public List<Paciente> getPacientesFromBDEstudios(Connection connNoTransacMySql) throws Exception;
 
 	public void deshacerRespaldo(Connection connNoTransac) throws Exception;
 	

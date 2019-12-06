@@ -116,13 +116,9 @@ public class ConnectionDAO {
 		
 			logger.debug("databaseMySql.host [" + config.getString("databaseMySql.host") + "]");
 			parametersConnection.setHostName(config.getString("databaseMySql.host"));
-			//logger.debug("databaseMySql.host [" + dataBaseHost + "]");
-			//parametersConnection.setHostName(dataBaseHost);
 
 			logger.debug("databaseMySql.name [" + config.getString("databaseMySql.name") + "]");
 			parametersConnection.setDatabaseName(config.getString("databaseMySql.name"));
-			//logger.debug("databaseMySql.name [" + dataBaseName + "]");
-			//parametersConnection.setDatabaseName(dataBaseName);
 
 			logger.debug("databaseMySql.user [" + config.getString("databaseMySql.user") + "]");
 			parametersConnection.setDatabaseUserName(config.getString("databaseMySql.user"));
@@ -153,8 +149,7 @@ public class ConnectionDAO {
 		props.put("user", parametros.getDatabaseUserName());
 		props.put("password", parametros.getPassword());
 		try {
-			//Class.forName("org.postgresql.Driver").newInstance();
-			Class.forName("org.mysql.jdbc.Driver").newInstance();
+			Class.forName("com.mysql.jdbc.Driver").newInstance();
 		} catch (final ClassNotFoundException ex) {
 			ex.printStackTrace();
 			logger.error("ClassNotFoundException", ex);
@@ -167,7 +162,6 @@ public class ConnectionDAO {
 		}
 
 		final StringBuffer url = new StringBuffer();
-		//url.append("jdbc:postgresql://");
 		url.append("jdbc:mysql://");
 		url.append(parametros.getHostName());
 		url.append(":");

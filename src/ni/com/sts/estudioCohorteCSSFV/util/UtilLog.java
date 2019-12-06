@@ -5,7 +5,7 @@ import org.apache.log4j.PropertyConfigurator;
 public class UtilLog {
 	public static void setLog(String logFileName)
     {
-        String log = Propiedades.BASEPATH + logFileName; //System.getProperty("user.dir") + logFileName;
+        String log = System.getProperty("user.dir") + logFileName; //Propiedades.BASEPATH + logFileName; 
         //System.out.println("Ruta Archiv conf Log ["+log+"]");
         PropertyConfigurator.configure(log);
     }

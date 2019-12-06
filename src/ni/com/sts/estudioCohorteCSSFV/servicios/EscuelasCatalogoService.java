@@ -22,5 +22,7 @@ public interface EscuelasCatalogoService {
 	public List<EscuelaCatalogo> getEscuelasFromODBC() throws Exception;
 
 	public void deshacerRespaldo(Connection connNoTransac) throws Exception;
+
+	public List<EscuelaCatalogo> getEscuelasFromBDEstudios(Connection connNoTransac) throws Exception;
 	
 }

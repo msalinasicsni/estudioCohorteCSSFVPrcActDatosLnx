@@ -12,7 +12,6 @@ import org.apache.commons.configuration.CompositeConfiguration;
 import org.apache.log4j.Logger;
 
 import ni.com.sts.estudioCohorteCSSFV.modelo.EscuelaCatalogo;
-import ni.com.sts.estudioCohorteCSSFV.modelo.EstudioCatalogo;
 import ni.com.sts.estudioCohorteCSSFV.servicios.EscuelasCatalogoService;
 import ni.com.sts.estudioCohorteCSSFV.util.ConnectionDAO;
 import ni.com.sts.estudioCohorteCSSFV.util.UtilLog;
@@ -205,5 +204,40 @@ public class EscuelasCatalogoDA extends ConnectionDAO implements EscuelasCatalog
 	      return escuelasList;
 	}
 
-
+	@Override
+	public List<EscuelaCatalogo> getEscuelasFromBDEstudios(Connection connNoTransac) throws Exception{
+		Statement stmt = null;
+		ResultSet rs = null;
+		List<EscuelaCatalogo> escuelasList = new ArrayList<EscuelaCatalogo>();
+        try {
+        	 String query = "select escuela, escuela_descripcion " +
+			      		"from escuelas";
+        	stmt = connNoTransac.createStatement();
+        	rs = stmt.executeQuery(query);
+		      while (rs.next()) {
+		    	  EscuelaCatalogo escuela = new EscuelaCatalogo();
+		    	  escuela.setCodEscuela(rs.getInt("escuela"));
+		    	  escuela.setDescripcion(rs.getString("escuela_descripcion"));		    	  
+		    	  //logger.info(escuela.getCodEscuela() + " " + escuela.getDescripcion());
+		    	  //System.out.println(escuela.getCodEscuela() + " " + escuela.getDescripcion());
+		    	  escuelasList.add(escuela);
+		      }
+        } catch (Throwable e) {
+            e.printStackTrace();
+            logger.error("Se ha producido un error al consultar base de datos ODBC :: EscuelasCatalogoDA" + "\n" + e.getMessage(),e);
+            throw new Exception(e);
+        } finally {
+            try {
+            	if (rs != null)
+            		rs.close();
+            	if (stmt != null)
+            		stmt.close();
+            } catch (SQLException ex) {
+    			logger.error(" No se pudo cerrar conexión ", ex);
+            }
+        } 
+		
+	      return escuelasList;
+	}
+	
 }

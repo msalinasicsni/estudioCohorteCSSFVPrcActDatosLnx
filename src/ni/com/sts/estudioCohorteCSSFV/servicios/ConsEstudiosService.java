@@ -20,5 +20,7 @@ public interface ConsEstudiosService {
 	public List<ConsEstudios> getConsEstudiosFromODBC() throws Exception;
 
 	public void deshacerRespaldo(Connection connNoTransac) throws Exception;
+
+	public List<ConsEstudios> getConsEstudiosFromBDEstudios(Connection connNoTransacMySql) throws Exception;
 	
 }

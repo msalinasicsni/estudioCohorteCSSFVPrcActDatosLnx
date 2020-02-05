@@ -9,6 +9,8 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.naming.CannotProceedException;
+
 import org.apache.commons.configuration.CompositeConfiguration;
 import org.apache.log4j.Logger;
 
@@ -69,7 +71,7 @@ public class PacientesDA extends ConnectionDAO implements PacientesService {
             pst.setString(18, null);
             pst.setString(19, null);
             pst.setString(20, String.valueOf(dato.getRetirado()));
-            
+            logger.info(dato.getCodExpediente());
             pst.executeUpdate();
 
         } catch (Exception e) {
@@ -144,7 +146,7 @@ public class PacientesDA extends ConnectionDAO implements PacientesService {
 		List<Paciente> pacientesList = new ArrayList<Paciente>();
         try {
         	String query = "select a.CODIGO, a.NOMBRE1, a.NOMBRE2, a.APELLIDO1, a.APELLIDO2, a.SEXO, a.FECHANAC, " + 
-        			"a.NOMBREPT, a.NOMBREPT2, a.APELLIDOPT, a.APELLIDOPT2, b.est_part " + 
+        			"b.tutor, b.est_part " + 
         			"from participantes a " + 
         			"inner join participantes_procesos b on a.CODIGO = b.codigo";
         	stmt = connNoTransacMySql.createStatement();
@@ -172,7 +174,48 @@ public class PacientesDA extends ConnectionDAO implements PacientesService {
 		    	  paciente.setSexo(rs.getString("SEXO").charAt(0));
 		    	  paciente.setFechaNac(rs.getDate("FECHANAC"));
 
-		    	  paciente.setTutorNombre1(rs.getString("NOMBREPT"));
+		    	  //saber cuantos espacios tiene
+		    	  //si tiene un espacio es solo un nombre y un apellido
+		    	  if (rs.getString("tutor")!=null && !rs.getString("tutor").trim().equals("")) {
+		    	  int espacios = contarEspacios(rs.getString("tutor").trim());
+			    	if (espacios == 0) {
+			    		paciente.setTutorNombre1(rs.getString("tutor").trim().toUpperCase());
+			    		paciente.setTutorApellido1("-");
+			    	}else if (espacios == 1) {
+			    		  String nombreTutor = rs.getString("tutor").trim();
+			    		  String[] valores = nombreTutor.split(" ");
+			    		  paciente.setTutorNombre1(valores[0]);
+			    		  paciente.setTutorApellido1(valores[1]);
+			    	  }else {
+			    		  String nombreTutor = rs.getString("tutor").trim();
+			    		  String[] valores = nombreTutor.split(" ");
+			    		  if (valores.length>1) {
+			    		  String parte1= valores[0]+ " "+valores[1];
+			    		  String parte2 = valores[2];
+			    		  String parte3="";
+			    		  for (int i=3; i < valores.length;i++) {
+			    			  parte2 += " "+valores[i];
+			    		  }
+			    		  if (parte2.length()>32) {
+			    			  parte3= parte2.substring(parte2.lastIndexOf(" "), parte2.length());
+			    			  parte2= parte2.substring(0,parte2.lastIndexOf(" "));
+			    			  
+			    		  }
+			    		  paciente.setTutorNombre1(parte1.toUpperCase());
+			    		  paciente.setTutorApellido1(parte2.trim().toUpperCase());
+			    		  paciente.setTutorApellido2(parte3.trim().toUpperCase());
+			    		  }else {
+			    			  paciente.setTutorNombre1(nombreTutor);
+			    			  paciente.setTutorApellido1("-");
+			    		  }
+			    	  }
+		    	  }else {
+		    		  paciente.setTutorNombre1("-");
+		    		  paciente.setTutorApellido1("-");
+		    	  }
+		    	  //si tiene 
+		    	  
+		    	  /*paciente.setTutorNombre1(rs.getString("NOMBREPT"));
 		    	  if (paciente.getTutorNombre1() != null && paciente.getTutorNombre1().length()>32)
 		    		  paciente.setTutorNombre1(paciente.getTutorNombre1().substring(0,31));
 		    	  
@@ -186,9 +229,9 @@ public class PacientesDA extends ConnectionDAO implements PacientesService {
 		    	  
 		    	  paciente.setTutorApellido2(rs.getString("APELLIDOPT2"));
 		    	  if (paciente.getTutorApellido2() != null && paciente.getTutorApellido2().length()>32)
-		    		  paciente.setTutorApellido2(paciente.getTutorApellido2().substring(0,31));
+		    		  paciente.setTutorApellido2(paciente.getTutorApellido2().substring(0,31));*/
 		    	  
-		    	  paciente.setRetirado(rs.getBoolean("est_part")==true?'1':'0');
+		    	  paciente.setRetirado(rs.getBoolean("est_part")==false?'1':'0');
 		    	  
 		    	  
 		    	  //logger.info(paciente.getCodExpediente() + " " + paciente.getNombre1()+ " " + paciente.getNombre2()+ " " + paciente.getApellido1()+ " " + paciente.getApellido2());		    	  
@@ -211,6 +254,16 @@ public class PacientesDA extends ConnectionDAO implements PacientesService {
         return pacientesList;
 	}
 
+	private int contarEspacios(String cadena) {
+		// El contador de espacios
+        int cantidadDeEspacios = 0;
+		for (int i = 0; i < cadena.length(); i++) {
+            // Si el carácter en [i] es un espacio (' ') aumentamos el contador 
+            if (cadena.charAt(i) == ' ') cantidadDeEspacios++;
+        }
+		return cantidadDeEspacios;
+		
+	}
 	@Override
 	public List<Paciente> getPacientesFromODBC() throws Exception {
 		Statement stmt = null;

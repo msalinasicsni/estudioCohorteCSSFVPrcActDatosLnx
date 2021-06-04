@@ -66,7 +66,7 @@ public class PacientesDA extends ConnectionDAO implements PacientesService {
             pst.setString(13, dato.getTutorNombre2());
             pst.setString(14, dato.getTutorApellido1());
             pst.setString(15, dato.getTutorApellido2());
-            pst.setString(16, null);
+            pst.setString(16, dato.getDireccion());
             pst.setString(17, null);
             pst.setString(18, null);
             pst.setString(19, null);
@@ -146,9 +146,11 @@ public class PacientesDA extends ConnectionDAO implements PacientesService {
 		List<Paciente> pacientesList = new ArrayList<Paciente>();
         try {
         	String query = "select a.CODIGO, a.NOMBRE1, a.NOMBRE2, a.APELLIDO1, a.APELLIDO2, a.SEXO, a.FECHANAC, " + 
-        			"b.tutor, b.est_part " + 
-        			"from participantes a " + 
-        			"inner join participantes_procesos b on a.CODIGO = b.codigo";
+        			"b.tutor, b.est_part, " +
+        			"c.DIRECCION " +
+        			"from participantes a " +
+        			"inner join participantes_procesos b on a.CODIGO = b.codigo  " +
+        			"inner join casas c on a.CODIGO_CASA = c.CODIGO";
         	stmt = connNoTransacMySql.createStatement();
         	rs = stmt.executeQuery(query);
 		      while (rs.next()) {
@@ -173,6 +175,10 @@ public class PacientesDA extends ConnectionDAO implements PacientesService {
 		    	  
 		    	  paciente.setSexo(rs.getString("SEXO").charAt(0));
 		    	  paciente.setFechaNac(rs.getDate("FECHANAC"));
+		    	  
+		    	  paciente.setDireccion(rs.getString("DIRECCION"));
+		    	  if (paciente.getDireccion() != null && paciente.getDireccion().length()>256)
+		    		  paciente.setDireccion(paciente.getDireccion().substring(0,255));
 
 		    	  //saber cuantos espacios tiene
 		    	  //si tiene un espacio es solo un nombre y un apellido

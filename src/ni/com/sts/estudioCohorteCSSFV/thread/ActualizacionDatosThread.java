@@ -2,6 +2,8 @@ package ni.com.sts.estudioCohorteCSSFV.thread;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
@@ -74,31 +76,30 @@ public class ActualizacionDatosThread extends Thread {
 		config = UtilProperty.getConfigurationfromExternalFile("estudioCohorteCSSFVAD.properties");
 		UtilLog.setLog(config.getString("estudioCohorteCSSFVAD.log"));
 		logger.info("Inicia "+this.getName());
+		System.out.println(getFechaHoraActual()+" "+"INICIO");
 		Connection connNoTransac = null;
 		Connection connNoTransacMySql = null;
 		while(true){
 			try{
 				
-				HistEjecucionProcesoAutomatico ejecucionProcesoHoy = histEjecucionProcesoService
-						.getEjecucionProcesoFechaHoy("ACTDATOS");
+				HistEjecucionProcesoAutomatico ejecucionProcesoHoy = histEjecucionProcesoService.getEjecucionProcesoFechaHoy("ACTDATOS");
 				if (ejecucionProcesoHoy != null) {
 					logger.debug("Se duerme main una hora");
-					System.out.println("Se duerme main una hora");
+					System.out.println(getFechaHoraActual()+" "+"Se duerme main una hora");
 					this.sleep(3600000);// 3600000 si ya se ejecuto se duerme una hora, por si se cambia el parámetro de
 										// la hora ejecución se vuelva a ejecutar
 					logger.debug("despierta main");
-					System.out.println("despierta main");
+					System.out.println(getFechaHoraActual()+" "+"despierta main");
 				} else {
 					String valor = parametroService.getParametroByName("HORA_EJECUCION_ADPC");
 					if (valor != null) {
-						System.out.println("HORA_EJECUCION_CAOC = " + valor);
+						System.out.println(getFechaHoraActual()+" "+"HORA_EJECUCION_CAOC = " + valor);
 						Date dFechaHoy = new Date();
 						String sFechaHoy = UtilDate.DateToString(dFechaHoy, "dd/MM/yyyy");
-						Date dFechaEjecucion = UtilDate.StringToDate(sFechaHoy + " " + valor, "dd/MM/yyyy HH:mm");
-						System.out.println(dFechaEjecucion.compareTo(dFechaHoy));
+						Date dFechaEjecucion = UtilDate.StringToDate(sFechaHoy+" "+valor, "dd/MM/yyyy HH:mm");
+						System.out.println(getFechaHoraActual()+" "+dFechaEjecucion.compareTo(dFechaHoy));
 						if (dFechaEjecucion.compareTo(dFechaHoy) < 0) {
-							InfoResultado registroProceso = histEjecucionProcesoService
-									.registrarEjecucionProceso("ACTDATOS");
+							InfoResultado registroProceso = histEjecucionProcesoService.registrarEjecucionProceso("ACTDATOS");
 							if (registroProceso.isOk()) {
 								connNoTransac = connectionDAO.getConection();
 								connNoTransacMySql = connectionDAO.getConectionMySql();
@@ -109,19 +110,18 @@ public class ActualizacionDatosThread extends Thread {
 								cargarConcentimientos(connNoTransac, connNoTransacMySql);
 							} else {
 								logger.debug("Se duerme main 5 min");
-								System.out.println("Se duerme main 5 min");
+								System.out.println(getFechaHoraActual()+" "+"Se duerme main 5 min");
 								Thread.currentThread().sleep(300000);// 300000 si aún no es hora de ejecutar proceso se
 																		// duerme 5 minutos
 								logger.debug("despierta main");
-								System.out.println("despierta main");
+								System.out.println(getFechaHoraActual()+" "+"despierta main");
 							}
 						} else {
 							logger.debug("Se duerme main 5 min. No se encontró valor de parámetro HORA_EJECUCION_ADPC");
-							System.out.println(
-									"Se duerme main 5 min. No se encontró valor de parámetro HORA_EJECUCION_ADPC");
+							System.out.println(getFechaHoraActual()+" "+"Se duerme main 5 min. No se encontró valor de parámetro HORA_EJECUCION_ADPC");
 							this.sleep(300000);// 300000 si aún no es hora de ejecutar proceso se duerme 5 minutos
 							logger.debug("despierta main");
-							System.out.println("despierta main");
+							System.out.println(getFechaHoraActual()+" "+"despierta main");
 						}
 					}
 				}
@@ -134,17 +134,18 @@ public class ActualizacionDatosThread extends Thread {
 			        if (connNoTransac!=null && !connNoTransac.isClosed()){
 			        	connNoTransac.close();
 			        	logger.debug("Conexión no transaccional postgresql cerrada");
-			        	System.out.println("Conexión no transaccional postgresql cerrada");
+			        	System.out.println(getFechaHoraActual()+" "+"Conexión no transaccional postgresql cerrada");
 			        }
 			        if (connNoTransacMySql!=null && !connNoTransacMySql.isClosed()){
 			        	connNoTransacMySql.close();
 			        	logger.debug("Conexión no transaccional mysql cerrada");
-			        	System.out.println("Conexión no transaccional mysql cerrada");
+			        	System.out.println(getFechaHoraActual()+" "+"Conexión no transaccional mysql cerrada");
 			        }
 			      } catch (Exception ee) {
 			        ee.printStackTrace();
 			      }
 			      logger.info("Finaliza "+this.getName());
+			      System.out.println(getFechaHoraActual()+" "+"FINALIZA");
 			}
 		}
 	}
@@ -270,44 +271,59 @@ public class ActualizacionDatosThread extends Thread {
 		    }
 	}
 
-	private void cargarConcentimientos(Connection connNoTransac, Connection connNoTransacMySql){
-		try { 
+	private void cargarConcentimientos(Connection connNoTransac, Connection connNoTransacMySql) {
+		try {
 			logger.info("Proceso actualizacion datos consentimientos iniciado");
-			  consEstudiosService.setConnTransac(conn);
-		      iniciarTransaccion();
-		      consEstudiosService.crearRespaldo(connNoTransac);
-		      List<ConsEstudios> consEstudiosList = consEstudiosService.getConsEstudiosFromBDEstudios(connNoTransacMySql);
-		      if (consEstudiosList.size()>0){
-			      for(ConsEstudios consEstudio: consEstudiosList){
-			    	  consEstudiosService.AddConsEstudio(consEstudio);
-			      }
-			      consEstudiosService.limpiarConsEstudiosTmp();
-			      confirmarTransaccion();
-		      }else{
-		    	  logger.info("no se encontraron registros en base de datos MySql estudios, se procede a deshacerRespaldo ConsEstudiosDA");
-		    	  try{
-			    		consEstudiosService.deshacerRespaldo(connNoTransac);		    		
-			    		deshacerTransaccion();		    		
-			    	}catch(Exception ex){
-			    		ex.printStackTrace();
-			    		logger.error("Error rollback transaction", ex);
-			    	}
-		      }
+			consEstudiosService.setConnTransac(conn);
+			iniciarTransaccion();
+			consEstudiosService.crearRespaldo(connNoTransac);
+			List<ConsEstudios> consEstudiosList = consEstudiosService.getConsEstudiosFromBDEstudios(connNoTransacMySql);
+			if (consEstudiosList.size() > 0) {
+				for (ConsEstudios consEstudio : consEstudiosList) {
+					consEstudiosService.AddConsEstudio(consEstudio);
+				}
+				consEstudiosService.limpiarConsEstudiosTmp();
+				confirmarTransaccion();
+			} else {
+				logger.info(
+						"no se encontraron registros en base de datos MySql estudios, se procede a deshacerRespaldo ConsEstudiosDA");
+				try {
+					consEstudiosService.deshacerRespaldo(connNoTransac);
+					deshacerTransaccion();
+				} catch (Exception ex) {
+					ex.printStackTrace();
+					logger.error("Error rollback transaction", ex);
+				}
+			}
 
-		    } catch (Exception e) {
-		      // handle the exception
-		    	try{
-		    		consEstudiosService.deshacerRespaldo(connNoTransac);		    		
-		    		deshacerTransaccion();		    		
-		    	}catch(Exception ex){
-		    		ex.printStackTrace();
-		    		logger.error("Error rollback transaction", ex);
-		    	}
-		    	e.printStackTrace();
-		    	System.err.println(e.getMessage());
-		    	logger.error("Error cargarConcentimientos", e);
-		    } finally {
-		    	logger.info("Proceso actualizacion datos consentimientos terminado");		      
-		    }
+		} catch (Exception e) {
+			// handle the exception
+			try {
+				consEstudiosService.deshacerRespaldo(connNoTransac);
+				deshacerTransaccion();
+			} catch (Exception ex) {
+				ex.printStackTrace();
+				logger.error("Error rollback transaction", ex);
+			}
+			e.printStackTrace();
+			System.err.println(e.getMessage());
+			logger.error("Error cargarConcentimientos", e);
+		} finally {
+			logger.info("Proceso actualizacion datos consentimientos terminado");
+		}
+	}
+	
+	public String getFechaHoraActual() {
+		String fecha = null;
+		try {
+			DateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+			Date date = new Date();
+			
+			fecha = dateFormat.format(date);
+			
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
+		return fecha;
 	}
 }

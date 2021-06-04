@@ -97,14 +97,14 @@ public class Propiedades
     {
     	 
         String userDir = System.getProperty("user.dir");
-        System.out.print("user.dir[" + userDir + "]");
+        //System.out.print("user.dir[" + userDir + "]");
         return userDir;
     }
 
     public String userHome()
     {
         String userHome = System.getProperty("user.home");
-        System.out.print("user.home[" + userHome + "]");
+        //System.out.print("user.home[" + userHome + "]");
         return userHome;
     }
 

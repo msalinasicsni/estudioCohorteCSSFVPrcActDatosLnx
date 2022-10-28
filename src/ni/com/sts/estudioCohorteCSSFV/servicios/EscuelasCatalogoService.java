@@ -25,4 +25,6 @@ public interface EscuelasCatalogoService {
 
 	public List<EscuelaCatalogo> getEscuelasFromBDEstudios(Connection connNoTransac) throws Exception;
 	
+	public List<EscuelaCatalogo> getEscuelasFromServerBDEstudios() throws Exception;
+	
 }

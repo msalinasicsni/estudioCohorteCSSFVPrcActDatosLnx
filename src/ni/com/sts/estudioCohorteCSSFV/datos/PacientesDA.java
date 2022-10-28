@@ -1,24 +1,40 @@
 package ni.com.sts.estudioCohorteCSSFV.datos;
 
+import java.io.BufferedReader;
+import java.io.FileOutputStream;
+import java.io.InputStreamReader;
+import java.lang.reflect.Type;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 import javax.naming.CannotProceedException;
 
+import org.apache.axis.encoding.Base64;
 import org.apache.commons.configuration.CompositeConfiguration;
 import org.apache.log4j.Logger;
+
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 import ni.com.sts.estudioCohorteCSSFV.modelo.Paciente;
 import ni.com.sts.estudioCohorteCSSFV.servicios.PacientesService;
 import ni.com.sts.estudioCohorteCSSFV.util.ConnectionDAO;
 import ni.com.sts.estudioCohorteCSSFV.util.UtilLog;
 import ni.com.sts.estudioCohorteCSSFV.util.UtilProperty;
+import ni.com.sts.estudioCohorteCSSFV.dto.ParticipanteDto;
 
 public class PacientesDA extends ConnectionDAO implements PacientesService {
 
@@ -140,13 +156,111 @@ public class PacientesDA extends ConnectionDAO implements PacientesService {
 	}
 	
 	@Override
+	public List<Paciente> getPacientesFromServerBDEstudios() throws Exception {
+		List<Paciente> pacientesList = new ArrayList<Paciente>();
+		try {
+			String PARTICIPANTES = config.getString("PARTICIPANTES");
+			String user = config.getString("USER");
+			String pwd = config.getString("PWD");
+			URL url = new URL(PARTICIPANTES);
+				
+			String userPassword = user + ":" + pwd;
+			String encodedAuth = Base64.encode(userPassword.getBytes(StandardCharsets.UTF_8));
+			String authHeaderValue = "Basic " + encodedAuth;
+			HttpURLConnection http = (HttpURLConnection)url.openConnection();
+			http.setRequestProperty("Authorization", authHeaderValue);
+			
+			BufferedReader br = null;
+			if (http.getResponseCode() == 200) {
+			    br = new BufferedReader(new InputStreamReader(http.getInputStream(), StandardCharsets.UTF_8));
+			} else {
+			    br = new BufferedReader(new InputStreamReader(http.getErrorStream(), StandardCharsets.UTF_8));
+			}
+			
+			 StringBuilder response = new StringBuilder();
+			 String currentLine;
+			 while ((currentLine = br.readLine()) != null)
+				 response.append(currentLine);
+			
+			 
+			 List<ParticipanteDto> participanteDto = new ArrayList<ParticipanteDto>();
+		     Type founderListType = founderListType = new TypeToken<ArrayList<ParticipanteDto>>(){}.getType();
+		     participanteDto = new Gson().fromJson(response.toString(), founderListType);
+		     for (int i = 0; i < participanteDto.size(); i++) {	
+		    	 Paciente paciente = new Paciente();
+		    	 paciente.setCodExpediente(participanteDto.get(i).getCodigo());
+		    	 paciente.setNombre1(participanteDto.get(i).getNombre1());
+		    	 if (participanteDto.get(i).getNombre2() != null && participanteDto.get(i).getNombre2() != "") {
+		    		 paciente.setNombre2(participanteDto.get(i).getNombre2());
+		    	 } else {
+		    		 paciente.setNombre2("");
+		    	 }
+		    	 paciente.setApellido1(participanteDto.get(i).getApellido1());
+		    	 if (participanteDto.get(i).getApellido2() != null & participanteDto.get(i).getApellido2() != "") {
+		    		 paciente.setApellido2(participanteDto.get(i).getApellido2());
+		    	 } else {
+		    		 paciente.setApellido2("");
+		    	 }
+		    	 paciente.setSexo(participanteDto.get(i).getSexo().charAt(0));
+
+		    	 long longDate = Long.valueOf(participanteDto.get(i).getFechaNac());
+		    	 Date date = new Date(longDate);
+		         		    	
+		    	 paciente.setFechaNac(date);
+		    	 
+		    	 if (participanteDto.get(i).getDireccion() != null && participanteDto.get(i).getDireccion() != "") {
+		    		 paciente.setDireccion(participanteDto.get(i).getDireccion());
+		    	 } else {
+		    		 paciente.setDireccion("");
+		    	 }
+		    	 
+		    	 if (participanteDto.get(i).getNombre1Tutor() != null && participanteDto.get(i).getNombre1Tutor() != "") {
+		    		 paciente.setTutorNombre1(participanteDto.get(i).getNombre1Tutor());
+		    	 } else {
+		    		 paciente.setTutorNombre1("");
+		    	 }
+		    	 
+		    	 if (participanteDto.get(i).getNombre2Tutor() != null && participanteDto.get(i).getNombre2Tutor() != "") {
+		    		 paciente.setTutorNombre2(participanteDto.get(i).getNombre2Tutor());
+		    	 } else {
+		    		 paciente.setTutorNombre2("");
+		    	 }
+		    	 
+		    	 if (participanteDto.get(i).getApellido1Tutor() != null && participanteDto.get(i).getApellido1Tutor() != "") {
+		    		 paciente.setTutorApellido1(participanteDto.get(i).getApellido1Tutor());
+		    	 } else {
+		    		 paciente.setTutorApellido1("");
+		    	 }
+		    	 
+		    	 if (participanteDto.get(i).getApellido2Tutor() != null && participanteDto.get(i).getApellido2Tutor() != "") {
+		    		 paciente.setTutorApellido2(participanteDto.get(i).getApellido2Tutor());
+		    	 } else {
+		    		 paciente.setTutorApellido2("");
+		    	 }
+		    	 paciente.setRetirado(participanteDto.get(i).getEstPart() <= 0 ? '1' : '0');
+		    	 //paciente.setRetirado(rs.getBoolean("est_part")==false?'1':'0');
+		    	 
+		    	 pacientesList.add(paciente);
+		     }
+			 br.close();
+			 http.disconnect();
+		} catch (Throwable e) {
+            e.printStackTrace();
+            logger.error("Se ha producido un error al consultar base de datos ODBC :: PacientesDA" + "\n" + e.getMessage(),e);
+            throw new Exception(e);
+        }
+		return pacientesList;
+	}
+	
+	@Override
 	public List<Paciente> getPacientesFromBDEstudios(Connection connNoTransacMySql) throws Exception {
 		Statement stmt = null;
 		ResultSet rs = null;
 		List<Paciente> pacientesList = new ArrayList<Paciente>();
         try {
         	String query = "select a.CODIGO, a.NOMBRE1, a.NOMBRE2, a.APELLIDO1, a.APELLIDO2, a.SEXO, a.FECHANAC, " + 
-        			"b.tutor, b.est_part, " +
+        			//"b.tutor, b.est_part, " +
+        			" a.NOMBRE1_TUTOR, a.NOMBRE2_TUTOR, a.APELLIDO1_TUTOR, a.APELLIDO2_TUTOR, b.est_part, " +
         			"c.DIRECCION " +
         			"from participantes a " +
         			"inner join participantes_procesos b on a.CODIGO = b.codigo  " +
@@ -180,9 +294,16 @@ public class PacientesDA extends ConnectionDAO implements PacientesService {
 		    	  if (paciente.getDireccion() != null && paciente.getDireccion().length()>256)
 		    		  paciente.setDireccion(paciente.getDireccion().substring(0,255));
 
+		    	  paciente.setTutorNombre1(rs.getString("NOMBRE1_TUTOR"));
+		    	  
+		    	  paciente.setTutorNombre2(rs.getString("NOMBRE2_TUTOR"));
+		    	  
+		    	  paciente.setTutorApellido1(rs.getString("APELLIDO1_TUTOR"));
+		    	  
+		    	  paciente.setTutorApellido2(rs.getString("APELLIDO2_TUTOR"));
 		    	  //saber cuantos espacios tiene
 		    	  //si tiene un espacio es solo un nombre y un apellido
-		    	  if (rs.getString("tutor")!=null && !rs.getString("tutor").trim().equals("")) {
+		    	 /* if (rs.getString("tutor")!=null && !rs.getString("tutor").trim().equals("")) {
 		    	  int espacios = contarEspacios(rs.getString("tutor").trim());
 			    	if (espacios == 0) {
 			    		paciente.setTutorNombre1(rs.getString("tutor").trim().toUpperCase());
@@ -218,7 +339,7 @@ public class PacientesDA extends ConnectionDAO implements PacientesService {
 		    	  }else {
 		    		  paciente.setTutorNombre1("-");
 		    		  paciente.setTutorApellido1("-");
-		    	  }
+		    	  }*/
 		    	  //si tiene 
 		    	  
 		    	  /*paciente.setTutorNombre1(rs.getString("NOMBREPT"));
@@ -396,7 +517,5 @@ public class PacientesDA extends ConnectionDAO implements PacientesService {
     			logger.error(" No se pudo cerrar conexión ", ex);
             }
         }
-
 	}
-
 }

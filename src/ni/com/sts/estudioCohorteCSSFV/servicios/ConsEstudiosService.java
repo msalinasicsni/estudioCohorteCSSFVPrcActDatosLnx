@@ -23,4 +23,6 @@ public interface ConsEstudiosService {
 
 	public List<ConsEstudios> getConsEstudiosFromBDEstudios(Connection connNoTransacMySql) throws Exception;
 	
+	public List<ConsEstudios> getConsEstudiosFromServerBDEstudios() throws Exception;
+	
 }

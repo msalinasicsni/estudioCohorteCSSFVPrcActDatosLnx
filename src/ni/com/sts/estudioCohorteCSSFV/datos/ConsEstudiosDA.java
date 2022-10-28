@@ -1,5 +1,11 @@
 package ni.com.sts.estudioCohorteCSSFV.datos;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.lang.reflect.Type;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -7,11 +13,17 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
+import org.apache.axis.encoding.Base64;
 import org.apache.commons.configuration.CompositeConfiguration;
 import org.apache.log4j.Logger;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
+import ni.com.sts.estudioCohorteCSSFV.dto.ConsentimientoDto;
 import ni.com.sts.estudioCohorteCSSFV.modelo.ConsEstudios;
 import ni.com.sts.estudioCohorteCSSFV.servicios.ConsEstudiosService;
 import ni.com.sts.estudioCohorteCSSFV.util.ConnectionDAO;
@@ -183,6 +195,116 @@ public class ConsEstudiosDA extends ConnectionDAO implements ConsEstudiosService
             }
         }
         return consEstudiosList;
+	}
+	
+	@Override
+	public List<ConsEstudios> getConsEstudiosFromServerBDEstudios() throws Exception {
+		List<ConsEstudios> consEstudiosList = new ArrayList<ConsEstudios>();
+		try {
+			String CONSENTIMIENTOS = config.getString("CONSENTIMIENTOS");
+			String user = config.getString("USER");
+			String pwd = config.getString("PWD");
+			URL url = new URL(CONSENTIMIENTOS);
+			String userPassword = user + ":" + pwd;
+			String encodedAuth = Base64.encode(userPassword.getBytes(StandardCharsets.UTF_8));
+			String authHeaderValue = "Basic " + encodedAuth;
+			HttpURLConnection http = (HttpURLConnection)url.openConnection();
+			http.setRequestProperty("Authorization", authHeaderValue);
+			
+			BufferedReader br = null;
+			if (http.getResponseCode() == 200) {
+			    br = new BufferedReader(new InputStreamReader(http.getInputStream(), StandardCharsets.UTF_8));
+			} else {
+			    br = new BufferedReader(new InputStreamReader(http.getErrorStream(), StandardCharsets.UTF_8));
+			}
+			
+			StringBuilder response = new StringBuilder();
+			String currentLine;
+			while ((currentLine = br.readLine()) != null)
+				 response.append(currentLine);
+			
+			List<ConsentimientoDto> consentimientoDto = new ArrayList<ConsentimientoDto>();
+		    Type founderListType = founderListType = new TypeToken<ArrayList<ConsentimientoDto>>(){}.getType();
+		    consentimientoDto = new Gson().fromJson(response.toString(), founderListType);
+		    
+		    for (int i = 0; i < consentimientoDto.size(); i++) {
+		    	ConsEstudios consEstudio = new ConsEstudios();
+		    	Calendar cal = Calendar.getInstance();
+		    	if (consentimientoDto.get(i).getFecha() != null && consentimientoDto.get(i).getFecha() != "") {
+		    		long longDate = Long.valueOf(consentimientoDto.get(i).getFecha());
+			    	Date date = new Date(longDate);
+			    	consEstudio.setFecha(date);
+		    	}
+		    	consEstudio.setCodigoExpediente(consentimientoDto.get(i).getCodigo());
+		    	if (consentimientoDto.get(i).getCons() != null) {
+		    		consEstudio.setCodigoConsentimiento(consentimientoDto.get(i).getCons());
+		    	}
+		    	if (consentimientoDto.get(i).getAsentChik() != null ) {
+		    		consEstudio.setAsentchik((short) consentimientoDto.get(i).getAsentChik());
+		    	} else {
+		    		consEstudio.setAsentchik((short) 0);
+		    	}
+		    	if (consentimientoDto.get(i).getParteB() != null) {
+		    		consEstudio.setParteb(consentimientoDto.get(i).getParteB().shortValue());
+		    	} else {
+		    		consEstudio.setParteb((short) 0);
+		    	}
+		    	if (consentimientoDto.get(i).getParteC() != null) {
+		    		consEstudio.setPartec(consentimientoDto.get(i).getParteC().shortValue());
+		    	} else {
+		    		consEstudio.setPartec((short) 0);
+		    	}
+		    	if (consentimientoDto.get(i).getParteD() != null) {
+		    		consEstudio.setParted(consentimientoDto.get(i).getParteD().shortValue());
+		    	} else {
+		    		consEstudio.setParted((short) 0);
+		    	}
+		    	if (consentimientoDto.get(i).getAsentimientoEsc() != null) {
+		    		consEstudio.setAsentimientoesc(consentimientoDto.get(i).getAsentimientoEsc().shortValue());
+		    	} else {
+		    		consEstudio.setAsentimientoesc((short) 0);
+		    	}
+		    	if (consentimientoDto.get(i).getParteE() != null) {
+		    		consEstudio.setPartee(consentimientoDto.get(i).getParteE().shortValue());
+		    	} else {
+		    		consEstudio.setPartee((short) 0);
+		    	}
+		    	if (consentimientoDto.get(i).getParteF() != null) {
+		    		consEstudio.setPartef(consentimientoDto.get(i).getParteF().shortValue());
+		    	} else {
+		    		consEstudio.setPartef((short) 0);
+		    	}
+		    	if (consentimientoDto.get(i).getTipoPartTrans() != null) {
+		    		consEstudio.setTipoparttrans(consentimientoDto.get(i).getTipoPartTrans());
+		    	} else {
+		    		consEstudio.setTipoparttrans(null);
+		    	}
+		    	if (consentimientoDto.get(i).getReactivacion() != null && !consentimientoDto.get(i).getReactivacion().trim().equals("")) {
+		    		consEstudio.setReactivacion(consentimientoDto.get(i).getReactivacion());
+		    	} else {
+		    		consEstudio.setReactivacion(null);
+		    	}
+		    	
+		    	if (consentimientoDto.get(i).getAhora() != null && consentimientoDto.get(i).getAhora() != "") {
+		    		long longDate = Long.valueOf(consentimientoDto.get(i).getAhora());
+			    	Date dateAhora = new Date(longDate);
+			    	consEstudio.setAhora(dateAhora);
+		    	} else {
+		    		consEstudio.setAhora(null);
+		    	}
+		    	
+		    	consEstudio.setRetirado(consentimientoDto.get(i).getRetirado() == true ? '1' : '0');
+		    	
+		    	consEstudiosList.add(consEstudio);
+		    }
+		    br.close();
+			http.disconnect();
+		} catch (Throwable e) {
+            e.printStackTrace();
+            logger.error("Se ha producido un error al consultar base de datos ODBC :: ConsEstudiosDA" + "\n" + e.getMessage(),e);
+            throw new Exception(e);
+        } 
+		return consEstudiosList;
 	}
 	
 	@Override

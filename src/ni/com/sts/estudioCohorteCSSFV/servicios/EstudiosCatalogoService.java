@@ -24,5 +24,7 @@ public interface EstudiosCatalogoService {
 	public void deshacerRespaldo(Connection connNoTransac) throws Exception;
 
 	public List<EstudioCatalogo> getEstudiosFromDBEstudios(Connection connNoTransac) throws Exception;
+	
+	public List<EstudioCatalogo> getEstudiosFromServerDBEstudios() throws Exception;
 
 }

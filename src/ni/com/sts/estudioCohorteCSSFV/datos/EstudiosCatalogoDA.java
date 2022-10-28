@@ -1,5 +1,11 @@
 package ni.com.sts.estudioCohorteCSSFV.datos;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.lang.reflect.Type;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -8,9 +14,14 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.axis.encoding.Base64;
 import org.apache.commons.configuration.CompositeConfiguration;
 import org.apache.log4j.Logger;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
+import ni.com.sts.estudioCohorteCSSFV.dto.TipoConsentimientoDto;
 import ni.com.sts.estudioCohorteCSSFV.modelo.EstudioCatalogo;
 import ni.com.sts.estudioCohorteCSSFV.servicios.EstudiosCatalogoService;
 import ni.com.sts.estudioCohorteCSSFV.util.ConnectionDAO;
@@ -180,8 +191,6 @@ public class EstudiosCatalogoDA extends ConnectionDAO implements EstudiosCatalog
 		    	  EstudioCatalogo estudio = new EstudioCatalogo();
 		    	  estudio.setCodEstudio(rs.getInt("cons"));
 		    	  estudio.setDescEstudio(rs.getString("desc_cons"));		    	  
-		    	  //logger.info(estudio.getCodEstudio() + " " + estudio.getDescEstudio());
-		    	  //System.out.println(estudio.getCodEstudio() + " " + estudio.getDescEstudio());
 		    	  estudiosList.add(estudio);
 		      }
         } catch (Throwable e) {
@@ -202,6 +211,51 @@ public class EstudiosCatalogoDA extends ConnectionDAO implements EstudiosCatalog
         } 
 		
 	      return estudiosList;
+	}
+	
+	@Override
+	public List<EstudioCatalogo> getEstudiosFromServerDBEstudios() throws Exception {
+		List<EstudioCatalogo> estudiosList = new ArrayList<EstudioCatalogo>();
+		try {
+			String TIPOSCONSENTIMIENTOS = config.getString("TIPOSCONSENTIMIENTOS");
+			String user = config.getString("USER");
+			String pwd = config.getString("PWD");
+			URL url = new URL(TIPOSCONSENTIMIENTOS);
+			String userPassword = user + ":" + pwd;
+			String encodedAuth = Base64.encode(userPassword.getBytes(StandardCharsets.UTF_8));
+			String authHeaderValue = "Basic " + encodedAuth;
+			HttpURLConnection http = (HttpURLConnection)url.openConnection();
+			http.setRequestProperty("Authorization", authHeaderValue);
+			
+			BufferedReader br = null;
+			if (http.getResponseCode() == 200) {
+			    br = new BufferedReader(new InputStreamReader(http.getInputStream(), StandardCharsets.UTF_8));
+			} else {
+			    br = new BufferedReader(new InputStreamReader(http.getErrorStream(), StandardCharsets.UTF_8));
+			}
+			StringBuilder response = new StringBuilder();
+			String currentLine;
+			while ((currentLine = br.readLine()) != null)
+				response.append(currentLine);
+			
+			List<TipoConsentimientoDto> tipoConsentimientoDto = new ArrayList<TipoConsentimientoDto>();
+		    Type founderListType = founderListType = new TypeToken<ArrayList<TipoConsentimientoDto>>(){}.getType();
+		    tipoConsentimientoDto = new Gson().fromJson(response.toString(), founderListType);
+		    
+		    for (int i = 0; i < tipoConsentimientoDto.size(); i++) {
+		    	EstudioCatalogo estudio = new EstudioCatalogo();
+		    	estudio.setCodEstudio(tipoConsentimientoDto.get(i).getCons());
+		    	estudio.setDescEstudio(tipoConsentimientoDto.get(i).getDescCons());		    	  
+		    	estudiosList.add(estudio);
+			}
+		    br.close();
+			http.disconnect();
+		} catch (Throwable e) {
+            e.printStackTrace();
+            logger.error("Se ha producido un error al consultar base de datos ODBC :: EstudiosCatalogoDA" + "\n" + e.getMessage(),e);
+            throw new Exception(e);
+        }
+		return estudiosList;
 	}
 	
 	@Override

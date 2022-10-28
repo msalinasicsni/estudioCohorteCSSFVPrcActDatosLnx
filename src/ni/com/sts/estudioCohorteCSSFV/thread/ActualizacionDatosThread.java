@@ -156,7 +156,8 @@ public class ActualizacionDatosThread extends Thread {
 			  escuelasCatalogoService.setConnTransac(conn);
 		      iniciarTransaccion();
 		      escuelasCatalogoService.crearRespaldo(connNoTransac);
-		      List<EscuelaCatalogo> escuelasList = escuelasCatalogoService.getEscuelasFromBDEstudios(connNoTransacMySql);
+		      //List<EscuelaCatalogo> escuelasList = escuelasCatalogoService.getEscuelasFromBDEstudios(connNoTransacMySql);
+		      List<EscuelaCatalogo> escuelasList = escuelasCatalogoService.getEscuelasFromServerBDEstudios();
 		      if (escuelasList.size()>0){
 			      for(EscuelaCatalogo escuela: escuelasList){
 			    	  escuelasCatalogoService.AddEscuela(escuela);
@@ -197,7 +198,8 @@ public class ActualizacionDatosThread extends Thread {
 			  pacientesService.setConnTransac(conn);
 		      iniciarTransaccion();
 		      pacientesService.crearRespaldo(connNoTransac);
-		      List<Paciente> pacientesList = pacientesService.getPacientesFromBDEstudios(connNoTransacMySql);
+		      //List<Paciente> pacientesList = pacientesService.getPacientesFromBDEstudios(connNoTransacMySql);
+		      List<Paciente> pacientesList = pacientesService.getPacientesFromServerBDEstudios();
 		      if (pacientesList.size()>0){
 			      for(Paciente paciente: pacientesList){
 			    	  pacientesService.AddPaciente(paciente);
@@ -238,7 +240,8 @@ public class ActualizacionDatosThread extends Thread {
 			  estudiosCatalogoService.setConnTransac(conn);
 		      iniciarTransaccion();
 		      estudiosCatalogoService.crearRespaldo(connNoTransac);
-		      List<EstudioCatalogo> estudiosList = estudiosCatalogoService.getEstudiosFromDBEstudios(connNoTransacMySql);
+		      //List<EstudioCatalogo> estudiosList = estudiosCatalogoService.getEstudiosFromDBEstudios(connNoTransacMySql);
+		      List<EstudioCatalogo> estudiosList = estudiosCatalogoService.getEstudiosFromServerDBEstudios();
 		      if (estudiosList.size()>0){
 			      for(EstudioCatalogo estudio: estudiosList){
 			    	  estudiosCatalogoService.AddEstudio(estudio);
@@ -277,7 +280,8 @@ public class ActualizacionDatosThread extends Thread {
 			consEstudiosService.setConnTransac(conn);
 			iniciarTransaccion();
 			consEstudiosService.crearRespaldo(connNoTransac);
-			List<ConsEstudios> consEstudiosList = consEstudiosService.getConsEstudiosFromBDEstudios(connNoTransacMySql);
+			//List<ConsEstudios> consEstudiosList = consEstudiosService.getConsEstudiosFromBDEstudios(connNoTransacMySql);
+			List<ConsEstudios> consEstudiosList = consEstudiosService.getConsEstudiosFromServerBDEstudios();
 			if (consEstudiosList.size() > 0) {
 				for (ConsEstudios consEstudio : consEstudiosList) {
 					consEstudiosService.AddConsEstudio(consEstudio);

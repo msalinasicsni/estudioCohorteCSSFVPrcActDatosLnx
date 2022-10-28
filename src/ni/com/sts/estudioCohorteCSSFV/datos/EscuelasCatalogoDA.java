@@ -1,5 +1,11 @@
 package ni.com.sts.estudioCohorteCSSFV.datos;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.lang.reflect.Type;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -8,9 +14,14 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.axis.encoding.Base64;
 import org.apache.commons.configuration.CompositeConfiguration;
 import org.apache.log4j.Logger;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
+import ni.com.sts.estudioCohorteCSSFV.dto.EscuelasDto;
 import ni.com.sts.estudioCohorteCSSFV.modelo.EscuelaCatalogo;
 import ni.com.sts.estudioCohorteCSSFV.servicios.EscuelasCatalogoService;
 import ni.com.sts.estudioCohorteCSSFV.util.ConnectionDAO;
@@ -202,6 +213,53 @@ public class EscuelasCatalogoDA extends ConnectionDAO implements EscuelasCatalog
         } 
 		
 	      return escuelasList;
+	}
+	
+	@Override
+	public List<EscuelaCatalogo> getEscuelasFromServerBDEstudios() throws Exception {
+		List<EscuelaCatalogo> escuelasList = new ArrayList<EscuelaCatalogo>();
+		try {
+			String ESCUELAS = config.getString("ESCUELAS");
+			String user = config.getString("USER");
+			String pwd = config.getString("PWD");
+			URL url = new URL(ESCUELAS);
+			
+			String userPassword = user + ":" + pwd;
+			String encodedAuth = Base64.encode(userPassword.getBytes(StandardCharsets.UTF_8));
+			String authHeaderValue = "Basic " + encodedAuth;
+			HttpURLConnection http = (HttpURLConnection)url.openConnection();
+			http.setRequestProperty("Authorization", authHeaderValue);
+			//http.setRequestProperty("Authorization", "Basic YWRtaW46d2lsbA==");
+			
+			BufferedReader br = null;
+			if (http.getResponseCode() == 200) {
+			    br = new BufferedReader(new InputStreamReader(http.getInputStream(), StandardCharsets.UTF_8));
+			} else {
+			    br = new BufferedReader(new InputStreamReader(http.getErrorStream(), StandardCharsets.UTF_8));
+			}
+			StringBuilder response = new StringBuilder();
+			String currentLine;
+			while ((currentLine = br.readLine()) != null)
+				response.append(currentLine);
+			
+			 //JsonObject jsonpObject = new Gson().fromJson(response.toString(), JsonObject.class);
+			List<EscuelasDto> escuelasDto = new ArrayList<EscuelasDto>();
+		    Type founderListType = founderListType = new TypeToken<ArrayList<EscuelasDto>>(){}.getType();
+		    escuelasDto = new Gson().fromJson(response.toString(), founderListType);
+		    for (int i = 0; i < escuelasDto.size(); i++) {
+		    	EscuelaCatalogo escuela = new EscuelaCatalogo();
+		    	escuela.setCodEscuela(escuelasDto.get(i).getCodigo());
+		    	escuela.setDescripcion(escuelasDto.get(i).getNombre());		    	  
+		    	escuelasList.add(escuela);
+		    }
+		    br.close();
+			http.disconnect();
+		} catch (Throwable e) {
+            e.printStackTrace();
+            logger.error("Se ha producido un error al consultar base de datos ODBC :: EscuelasCatalogoDA" + "\n" + e.getMessage(),e);
+            throw new Exception(e);
+        }
+		return escuelasList;
 	}
 
 	@Override
